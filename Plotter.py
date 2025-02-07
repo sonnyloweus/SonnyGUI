@@ -1,4 +1,3 @@
-
 import pyqtgraph as pg
 
 class PlotWidget(pg.PlotWidget):

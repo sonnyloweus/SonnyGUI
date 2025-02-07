@@ -1,30 +1,39 @@
 import random
 import time
+import numpy as np
 from PyQt5.QtCore import QThread, pyqtSignal
+
+from PyQt5.QtWidgets import (
+    QMessageBox,
+)
 
 class ExperimentWorker(QThread):
     """
     This class is used to run an experiment, used on a separate QThread than the main loop.
     Communicates through signals to be thread-safe
     """
-    data_generated = pyqtSignal(list)  # Signal to send experiment data
+    dataGenerated = pyqtSignal(list)  # Signal to send experiment data
 
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self.running = True  # Control flag for stopping the thread
+    def __init__(self, experimentObject, config, parent=None):
+        super().__init__()
+        self.config = config
+        self.experimentObject = experimentObject  # This is already instantiated
+        self.running = True
 
     def run(self):
-        """Generate data and emit it in real-time."""
-        data = []
-        while self.running:
-            new_value = random.uniform(0, 10)  # Generate a random number
-            data.append(new_value)
-            if len(data) > 100:  # Keep dataset fixed length
-                data.pop(0)
+        print(self.config)
+        if self.experimentObject is None:
+            QMessageBox.critical(None, "Error", "No Experiment Instance available.")
+            return
 
-            self.data_generated.emit(data)  # Send data to the plot worker
-            time.sleep(0.1)  # Simulate faster data update
+        data = []
+        x = 0
+        while self.running:
+            y = self.experimentObject.compute(x)
+            data.append(y)
+            self.dataGenerated.emit(data)
+            x += 0.1
+            time.sleep(0.1)  # Simulate real-time data streaming
 
     def stop(self):
-        """Stop the thread gracefully."""
         self.running = False
