@@ -7,11 +7,9 @@ class Cos:
         Initialize the Sin function generator.
         :param alpha: Amplitude multiplier
         :param beta: Frequency multiplier
-        :param interval: Time interval (seconds) between data points
         """
         self.alpha = config["alpha"]
         self.beta = config["beta"]
-        self.interval = config["interval"]
         self.t = 0
 
     def compute(self, x):
@@ -20,5 +18,5 @@ class Cos:
     ######### DEFINE TEMPLATE CONFIG #########
     config_template = {
         "alpha": 1.0,
-        "beta": 1.0
+        "beta": 1.0,
     }

@@ -9,6 +9,6 @@ class PlotWidget(pg.PlotWidget):
         self.plot_line = self.plot([], [], pen=pg.mkPen(color="b", width=2))  # Blue line
 
     def updatePlot(self, data):
-        """Update the PyQtGraph plot dynamically."""
+        """ Update the PyQtGraph plot dynamically."""
         x = list(range(len(data)))
         self.plot_line.setData(x, data)  # Update plot data

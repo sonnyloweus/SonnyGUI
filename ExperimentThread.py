@@ -1,6 +1,4 @@
-import random
 import time
-import numpy as np
 from PyQt5.QtCore import QThread, pyqtSignal
 
 from PyQt5.QtWidgets import (
@@ -17,11 +15,11 @@ class ExperimentWorker(QThread):
     def __init__(self, experimentObject, config, parent=None):
         super().__init__()
         self.config = config
+        self.experimentClass = config["Exp. Class"]
         self.experimentObject = experimentObject  # This is already instantiated
         self.running = True
 
     def run(self):
-        print(self.config)
         if self.experimentObject is None:
             QMessageBox.critical(None, "Error", "No Experiment Instance available.")
             return
