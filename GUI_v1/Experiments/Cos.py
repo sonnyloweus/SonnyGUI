@@ -20,3 +20,7 @@ class Cos:
         "alpha": 1.0,
         "beta": 1.0,
     }
+
+    experiment_type = {
+        "Exp. Class": "Elementary",
+    }

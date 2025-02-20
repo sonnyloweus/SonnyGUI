@@ -31,7 +31,7 @@ class ExperimentWorker(QThread):
             data.append(y)
             self.dataGenerated.emit(data)
             x += 0.1
-            time.sleep(0.1)  # Simulate real-time data streaming
+            time.sleep(0.05)  # Simulate real-time data streaming
 
     def stop(self):
         self.running = False
