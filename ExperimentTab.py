@@ -13,7 +13,7 @@ from PyQt5.QtWidgets import (
     QMessageBox
 )
 
-from init.initialize import BaseConfig
+from Init.initialize import BaseConfig
 
 class QTabExperiment(QWidget):
 
@@ -109,3 +109,5 @@ class QTabExperiment(QWidget):
         if self.experiment_instance is None:
             QMessageBox.critical(None, "Error", "No Experiment Class matching File Name Found.")
 
+    def update_data(self, data):
+        print("updating data")
