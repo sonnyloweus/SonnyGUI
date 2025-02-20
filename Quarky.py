@@ -34,9 +34,9 @@ from qick import RAveragerProgram, AveragerProgram, NDAveragerProgram
 
 path = os.getcwd()
 try:
-    os.add_dll_directory(os.path.dirname(path) + '\\PythonDrivers')
+    os.add_dll_directory(path + '\\PythonDrivers')
 except AttributeError:
-    os.environ["PATH"] = os.path.dirname(path) + '\\PythonDrivers' + ";" + os.environ["PATH"]
+    os.environ["PATH"] = path + '\\PythonDrivers' + ";" + os.environ["PATH"]
 
 class Quarky(QMainWindow):
 
