@@ -208,6 +208,6 @@ class QQuarkTab(QWidget):
 
     def update_data(self, data):
         print("updating data")
-        self.data = data
+        self.process_data(data)
         self.clear_plots()
         self.plot_data()
