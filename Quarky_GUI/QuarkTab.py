@@ -118,16 +118,18 @@ class QQuarkTab(QWidget):
 
     def load_dataset_file(self, dataset_file):
         self.data = Helpers.h5_to_dict(dataset_file)
+        print(self.data)
         self.plot_data()
 
     def plot_data(self):
         num_plots = 0
         f = self.data
-        for name, dataset in f.items():
-            data = dataset[:]
+        if 'data' in self.data:
+            f = self.data['data']
+        for name, data in f.items():
+            if isinstance(data, list):
+                data = np.array(data[0][0])
             shape = data.shape
-            print(len(shape), shape)
-            print(name, dataset)
 
             # 1D data -> 2D Plots
             if len(shape) == 1:
@@ -137,7 +139,7 @@ class QQuarkTab(QWidget):
                     # Iterate through all keys in the file
                     if name == 'x_pts':
                         continue
-                    y_data = list(dataset)
+                    y_data = list(data)
                     if len(x_data) == len(y_data):
                         num_plots += 1
                         plot = self.plot_widget.addPlot()

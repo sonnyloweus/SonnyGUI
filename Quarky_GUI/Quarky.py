@@ -309,8 +309,9 @@ class Quarky(QMainWindow):
             current_tab_idx = self.central_tabs.currentIndex()
             self.change_tab(current_tab_idx)
 
-    def update_progress(self, sets_complete, reps, sets):
+    def update_progress(self, sets_complete):
         ### Function to run to update the progress bar
+        reps, sets = self.current_tab.config['reps'], self.current_tab.config['sets']
         self.experiment_progress_bar.setValue(math.floor(float(sets_complete) / sets * 100))
         self.experiment_progress_bar.setFormat(
             str(sets_complete * reps) + "/" + str(sets * reps))
