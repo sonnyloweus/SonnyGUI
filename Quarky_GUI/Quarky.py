@@ -1,11 +1,9 @@
-import sys, os, inspect
-import h5py
+import sys, os
 import math
 import datetime
-import numpy as np
 from pathlib import Path
 from PyQt5.QtCore import (
-    Qt, QSize, QRect, QObject, QThread, pyqtSignal, pyqtSlot, qCritical
+    Qt, QSize, QThread
 )
 
 from PyQt5.QtWidgets import (
@@ -30,13 +28,12 @@ from QuarkTab import QQuarkTab
 from VoltagePanel import QVoltagePanel
 from ConfigTree import QConfigTree
 import Helpers
-from qick import RAveragerProgram, AveragerProgram, NDAveragerProgram
 
 path = os.getcwd()
 try:
-    os.add_dll_directory(path + '\\PythonDrivers')
+    os.add_dll_directory(os.path.dirname(path) + '\\PythonDrivers')
 except AttributeError:
-    os.environ["PATH"] = path + '\\PythonDrivers' + ";" + os.environ["PATH"]
+    os.environ["PATH"] = os.path.dirname(path) + '\\PythonDrivers' + ";" + os.environ["PATH"]
 
 class Quarky(QMainWindow):
 
@@ -48,6 +45,7 @@ class Quarky(QMainWindow):
         self.soc = None
         self.soccfg = None
         self.soc_connected = False
+
         self.ip_address = None
         # self.ip_address =  "192.168.1.7" ### Need to change to accounts tab
 

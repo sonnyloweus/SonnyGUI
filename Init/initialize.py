@@ -54,7 +54,7 @@ needs to be adjusted to reflect the individual setup
 
 
 ###### define default configuration
-BaseConfig={
+BaseConfig = {
         "res_ch": 0, # --Fixed
         "qubit_ch": 1,  # --Fixed
         "mixer_freq":0.0, # MHz
@@ -76,4 +76,4 @@ BaseConfig={
         "adc_trig_offset": 0.468+0.02, #+ 1, #soc.us2cycles(0.468-0.02), # [Clock ticks]
         # Try varying adc_trig_offset from 100 to 220 clock ticks
         "cavity_LO": 0.0,
-       }
+}
