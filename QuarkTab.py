@@ -150,5 +150,8 @@ class QQuarkTab(QWidget):
                         if num_plots % 2 == 0:
                             self.plot_widget.nextRow()
 
+    def clear_plots(self):
+        self.plot_widget.ci.clear()
+
     def update_data(self, data):
         print("updating data")

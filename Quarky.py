@@ -224,6 +224,7 @@ class Quarky(QMainWindow):
             self.experiment_worker.moveToThread(self.thread)  # Move the ExperimentThread onto the actual QThread
 
             self.thread.started.connect(self.experiment_worker.run)
+            self.thread.started.connect(self.current_tab.clear_plots)
             self.experiment_worker.finished.connect(self.experiment_worker.quit)
             self.experiment_worker.finished.connect(self.experiment_worker.deleteLater)
             self.thread.finished.connect(self.thread.deleteLater)
