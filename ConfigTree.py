@@ -61,7 +61,7 @@ class QConfigTree(QTreeView):
         self.tree.model().removeRow(0)
         self.tree.model().removeRow(0)
 
-        print(type(config_update), config_update)
+        # print(type(config_update), config_update)
 
         ### set the config to something new and reshow it
         if config_update is not None:
