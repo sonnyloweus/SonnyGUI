@@ -118,12 +118,11 @@ class QQuarkTab(QWidget):
 
     def load_dataset_file(self, dataset_file):
         self.data = Helpers.h5_to_dict(dataset_file)
-        print(self.data)
-        self.plot_data()
+        self.plot_data(self.data)
 
-    def plot_data(self):
+    def plot_data(self, data):
         num_plots = 0
-        f = self.data
+        f = data
         if 'data' in self.data:
             f = self.data['data']
         for name, data in f.items():
@@ -179,6 +178,33 @@ class QQuarkTab(QWidget):
                 x, y = mouse_point.x(), mouse_point.y()
                 self.coord_label.setText(f"X: {x:.2f}\nY: {y:.2f}")
                 break
+
+    def process_data(self, data):
+        self.data = data
+
+        ### check what set number is being run
+        set_num = data['data']['set_num']
+        if set_num == 0:
+            self.data_cur = data
+        elif set_num > 0:
+            avgi = (self.data_cur['data']['avgi'][0][0] * (set_num) + data['data']['avgi'][0][0]) / (set_num + 1)
+            avgq = (self.data_cur['data']['avgq'][0][0] * (set_num) + data['data']['avgq'][0][0]) / (set_num + 1)
+            self.data_cur['data']['avgi'][0][0] = avgi
+            self.data_cur['data']['avgq'][0][0] = avgq
+        self.data['data']['avgi'][0][0] = self.data_cur['data']['avgi'][0][0]
+        self.data['data']['avgq'][0][0] = self.data_cur['data']['avgq'][0][0]
+
+        ### create a diction to feed into the plot widget for labels
+        # plot_labels = {
+        #     "x label": self.experiment.cfg["x_pts_label"],
+        #     "y label": self.experiment.cfg["y_pts_label"],
+        # }
+        ### check for if the y label is none (for single varible sweep) and set the y label to I/Q or amp/phase
+        # if plot_labels["y label"] == None:
+        #     plot_labels["y label 1"] = "I (a.u.)"
+        #     plot_labels["y label 2"] = "Q (a.u.)"
+
+        self.plot_data(self.data)
 
     def update_data(self, data):
         print("updating data")
