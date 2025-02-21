@@ -118,14 +118,17 @@ class QQuarkTab(QWidget):
 
     def load_dataset_file(self, dataset_file):
         self.data = Helpers.h5_to_dict(dataset_file)
-        self.plot_data(self.data)
+        self.plot_data()
 
-    def plot_data(self, data):
+    def plot_data(self):
+        self.clear_plots()
         num_plots = 0
-        f = data
+        f = self.data
         if 'data' in self.data:
             f = self.data['data']
         for name, data in f.items():
+            if isinstance(data, int):
+                continue
             if isinstance(data, list):
                 data = np.array(data[0][0])
             shape = data.shape
@@ -204,10 +207,8 @@ class QQuarkTab(QWidget):
         #     plot_labels["y label 1"] = "I (a.u.)"
         #     plot_labels["y label 2"] = "Q (a.u.)"
 
-        self.plot_data(self.data)
 
     def update_data(self, data):
         print("updating data")
         self.process_data(data)
-        self.clear_plots()
         self.plot_data()

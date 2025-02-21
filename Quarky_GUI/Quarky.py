@@ -85,7 +85,7 @@ class Quarky(QMainWindow):
         self.soc_status_label.setText('<html><b>✖ Soc Disconnected</b></html>')
         self.soc_status_label.setObjectName("soc_status_label")
         self.experiment_progress_bar = QProgressBar(self.wrapper)
-        self.experiment_progress_bar.setProperty("value", 0) # Show a peek of blue
+        self.experiment_progress_bar.setProperty("value", 0)
         self.experiment_progress_bar.setObjectName("experiment_progress_bar")
         self.experiment_stopwatch = QLabel(self.wrapper)
         self.experiment_stopwatch.setAlignment(Qt.AlignRight | Qt.AlignTrailing | Qt.AlignVCenter)
@@ -222,7 +222,6 @@ class Quarky(QMainWindow):
             self.experiment_worker.moveToThread(self.thread)  # Move the ExperimentThread onto the actual QThread
 
             self.thread.started.connect(self.experiment_worker.run)
-            self.thread.started.connect(self.current_tab.clear_plots)
             self.experiment_worker.finished.connect(self.thread.quit)
             self.experiment_worker.finished.connect(self.experiment_worker.deleteLater)
             self.thread.finished.connect(self.thread.deleteLater)
