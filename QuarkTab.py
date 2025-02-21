@@ -29,16 +29,19 @@ class QQuarkTab(QWidget):
         self.config = {"Experiment Config": {}, "Base Config": BaseConfig}
         self.is_experiment = is_experiment
         self.data = dataset_file
-
         self.experiment_type = None
         self.experiment_instance = None  # The actual experiment object
+
+        #colormap (e.g., 'viridis', 'inferno', etc.)
+        cmap = pg.colormap.get('viridis')
+        self.lut = cmap.getLookupTable()
 
         ### Setting up the Tab
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
 
         ### Plotter within Tab
         self.plot_layout = QHBoxLayout(self)
-        self.plot_layout.setContentsMargins(5, 5, 5, 5)
+        self.plot_layout.setContentsMargins(2, 2, 2, 2)
         self.plot_layout.setObjectName("plot_layout")
 
         # Plot Button Toolbar
@@ -52,13 +55,16 @@ class QQuarkTab(QWidget):
         self.save_data_button.setObjectName("save_data_button")
         self.plot_toolbar.addWidget(self.copy_plot_button)
         self.plot_toolbar.addWidget(self.save_data_button)
-        spacerItem = QSpacerItem(28, 318, QSizePolicy.Minimum, QSizePolicy.Expanding)
+        spacerItem = QSpacerItem(20, 318, QSizePolicy.Minimum, QSizePolicy.Expanding)
         self.plot_toolbar.addItem(spacerItem)
+        self.plot_layout.setSpacing(0)
         self.plot_layout.addLayout(self.plot_toolbar)
 
         # The actual plot itself
         self.plot_widget = pg.GraphicsLayoutWidget(self)
         self.plot_widget.setBackground("w")
+        self.plot_widget.ci.setSpacing(2)  # Reduce spacing
+        self.plot_widget.ci.setContentsMargins(3, 3, 3, 3)  # Optional: Adjust margins
         self.plot_widget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.plot_widget.setMinimumSize(QSize(375, 0))
         self.plot_widget.setObjectName("plot_widget")
@@ -102,31 +108,47 @@ class QQuarkTab(QWidget):
 
     def import_data(self):
         with h5py.File(self.data, "r") as f:
-
-            # Extract the x-axis (assume it's labeled 'x_pts')
-            x_data = None
-            if 'x_pts' in f:
-                x_data = list(f['x_pts'])
-
-            print(x_data)
             print(f.keys())
+            num_plots = 0
 
-            # Iterate through all datasets in the file
-            for key in f.keys():
-                if key == 'x_pts':  # Skip x-axis itself
-                    continue
-                var = f[key]
+            for name, dataset in f.items():
+                data = dataset[:]
+                shape = data.shape
+                print(len(shape), shape)
+                print(name, dataset)
 
-                # Ensure it's plottable
-                if isinstance(var, h5py.Dataset):
-                    y_data = list(var)
-                    if len(x_data) == len(y_data):
-                        plot = self.plot_widget.addPlot(title=key)
-                        plot.plot(x_data, y_data, pen=None, symbol='o', symbolSize=3, symbolBrush='b', name=key)  # Scatter plot
-                        plot.showGrid(x=True, y=True)
+                # 1D data -> 2D Plots
+                if len(shape) == 1:
+                    x_data = None
+                    if 'x_pts' in f:
+                        x_data = list(f['x_pts'])
+                        # Iterate through all keys in the file
+                        if name == 'x_pts':
+                            continue
+                        if isinstance(dataset, h5py.Dataset):
+                            y_data = list(dataset)
+                            if len(x_data) == len(y_data):
+                                num_plots += 1
+                                plot = self.plot_widget.addPlot()
+                                plot.plot(x_data, y_data, pen=None, symbol='o', symbolSize=3, symbolBrush='b', name=name)  # Scatter plot
+                                plot.setLabel("left", name)
+                                plot.showGrid(x=True, y=True)
+                                self.plot_widget.nextRow()
+                elif len(shape) == 2:
+                    num_plots += 1
+                    plot = self.plot_widget.addPlot(title=name)
+                    # 2-column data -> IQ scatter plot
+                    if shape[1] == 2:
+                        plot.plot(data[:, 0], data[:, 1], pen=None, symbol="o")
                         self.plot_widget.nextRow()
+
+                    # General 2D data -> Heatmap
                     else:
-                        print(f"Skipping {key}: x_data and y_data length mismatch ({len(x_data)} vs {len(y_data)})")
+                        img = pg.ImageItem(data.T)  # Transpose for correct orientation
+                        img.setLookupTable(self.lut)
+                        plot.addItem(img)
+                        if num_plots % 2 == 0:
+                            self.plot_widget.nextRow()
 
     def update_data(self, data):
         print("updating data")
