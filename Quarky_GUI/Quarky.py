@@ -207,7 +207,7 @@ class Quarky(QMainWindow):
             config = BaseConfig | UpdateConfig
 
             experiment_instance = self.current_tab.experiment_instance
-            experiment_name = self.current_tab.experiment_name
+            experiment_name = self.current_tab.tab_name
             date_time_now = datetime.datetime.now()
             date_time_string = date_time_now.strftime("%Y_%m_%d_%H_%M_%S")
             date_string = date_time_now.strftime("%Y_%m_%d")
@@ -223,7 +223,7 @@ class Quarky(QMainWindow):
 
             self.thread.started.connect(self.experiment_worker.run)
             self.thread.started.connect(self.current_tab.clear_plots)
-            self.experiment_worker.finished.connect(self.experiment_worker.quit)
+            self.experiment_worker.finished.connect(self.thread.quit)
             self.experiment_worker.finished.connect(self.experiment_worker.deleteLater)
             self.thread.finished.connect(self.thread.deleteLater)
             self.thread.finished.connect(self.stop_experiment)
