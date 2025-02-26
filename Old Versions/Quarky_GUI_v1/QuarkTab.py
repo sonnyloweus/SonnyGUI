@@ -1,15 +1,11 @@
-import sys, os, inspect
-import h5py
+import inspect
 import numpy as np
-from pathlib import Path
-from PyQt5.QtCore import Qt, QSize, QRect
+from PyQt5.QtCore import Qt, QSize
 from PyQt5.QtWidgets import (
     QWidget,
-    QPushButton,
     QVBoxLayout,
     QHBoxLayout,
     QSizePolicy,
-    QLayout,
     QSpacerItem,
     QToolButton,
     QMessageBox,

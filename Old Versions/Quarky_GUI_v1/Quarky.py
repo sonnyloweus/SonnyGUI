@@ -1,26 +1,9 @@
-"""
-Quarky.py
-~~~~~~~~~~
-Main entry point for the Quarky application.
-
-This module initializes the GUI, handles application-level logic,
-and manages interactions between different components.
-"""
-
-# TODO: Load Config Button
-# TODO: Experiment Class Plotter
-# TODO: include legend for plotter
-# TODO: write __init__ functions for each of our packages
-
 import sys, os
 import math
 import datetime
 from pathlib import Path
 from PyQt5.QtCore import (
-    Qt, QSize, QThread, pyqtSignal, qInstallMessageHandler, qDebug,
-    qInfo,
-    qWarning,
-    qCritical,
+    Qt, QSize, QThread
 )
 
 from PyQt5.QtWidgets import (
@@ -39,28 +22,20 @@ from PyQt5.QtWidgets import (
     QSizePolicy
 )
 
-from scripts.CoreLib.Experiment import ExperimentClass
-from scripts.CoreLib.socProxy import makeProxy
-from scripts.Init.initialize import BaseConfig
+from CoreLib.socProxy import makeProxy
+from ExperimentThread import ExperimentThread
+from QuarkTab import QQuarkTab
+from VoltagePanel import QVoltagePanel
+from ConfigTree import QConfigTree
+import Helpers
 
-from scripts.ExperimentThread import ExperimentThread
-from scripts.QuarkTab import QQuarkTab
-from scripts.VoltagePanel import QVoltagePanel
-from scripts.AccountsPanel import QAccountPanel
-from scripts.LogPanel import QLogPanel
-from scripts.ConfigTree import QConfigTree
-import scripts.Helpers as Helpers
-
-script_directory = os.path.dirname(os.path.realpath(__file__))
-script_parent_directory = os.path.dirname(script_directory)
+path = os.getcwd()
 try:
-    os.add_dll_directory(os.path.join(script_parent_directory, 'PythonDrivers'))
+    os.add_dll_directory(os.path.dirname(path) + '\\PythonDrivers')
 except AttributeError:
-    os.environ["PATH"] = script_parent_directory + '\\PythonDrivers' + ";" + os.environ["PATH"]
+    os.environ["PATH"] = os.path.dirname(path) + '\\PythonDrivers' + ";" + os.environ["PATH"]
 
 class Quarky(QMainWindow):
-
-    rfsoc_connection_updated = pyqtSignal(str, str)
 
     def __init__(self):
         super().__init__()
@@ -71,9 +46,11 @@ class Quarky(QMainWindow):
         self.soccfg = None
         self.soc_connected = False
 
+        self.ip_address = None
+        # self.ip_address =  "192.168.1.7" ### Need to change to accounts tab
+
         self.current_tab = None
         self.tabs_added = False
-
         self.setup_ui()
 
     def setup_ui(self):
@@ -142,11 +119,11 @@ class Quarky(QMainWindow):
 
         ### Experiment Tabs
         self.central_tabs = QTabWidget(self.main_splitter)
-        central_tab_sizepolicy = QSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Expanding)
-        central_tab_sizepolicy.setHorizontalStretch(0)
-        central_tab_sizepolicy.setVerticalStretch(0)
-        central_tab_sizepolicy.setHeightForWidth(self.central_tabs.sizePolicy().hasHeightForWidth())
-        self.central_tabs.setSizePolicy(central_tab_sizepolicy)
+        sizePolicy = QSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Expanding)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.central_tabs.sizePolicy().hasHeightForWidth())
+        self.central_tabs.setSizePolicy(sizePolicy)
         self.central_tabs.setMinimumSize(QSize(400, 0))
         self.central_tabs.setTabPosition(QTabWidget.North)
         self.central_tabs.setTabShape(QTabWidget.Rounded)
@@ -155,7 +132,7 @@ class Quarky(QMainWindow):
         self.central_tabs.setTabsClosable(True)
         self.central_tabs.setMovable(True)
         self.central_tabs.setTabBarAutoHide(False)
-        self.central_tabs.setObjectName("central_tabs")
+        self.central_tabs.setObjectName("experiment_tabs")
         self.central_tabs.setStyleSheet("background-color: #F8F8F8")  # Light gray background
 
         ### Template Experiment Tab
@@ -166,32 +143,8 @@ class Quarky(QMainWindow):
         ### Config Tree
         self.config_tree_panel = QConfigTree(self.main_splitter, template_experiment_tab.config)
 
-        ### Side Tabs Panel
-        self.side_tabs = QTabWidget(self.main_splitter)
-        side_tab_sizepolicy = QSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Expanding)
-        side_tab_sizepolicy.setHorizontalStretch(0)
-        side_tab_sizepolicy.setVerticalStretch(0)
-        side_tab_sizepolicy.setHeightForWidth(self.side_tabs.sizePolicy().hasHeightForWidth())
-        self.side_tabs.setSizePolicy(side_tab_sizepolicy)
-        self.side_tabs.setMinimumSize(QSize(175, 0))
-        self.side_tabs.setTabPosition(QTabWidget.North)
-        self.side_tabs.setTabShape(QTabWidget.Rounded)
-        self.side_tabs.setDocumentMode(False)
-        self.side_tabs.setDocumentMode(True)
-        self.side_tabs.setTabsClosable(False)
-        self.side_tabs.setMovable(False)
-        self.side_tabs.setObjectName("side_tabs")
-
         ### Voltage Controller Panel
-        self.voltage_controller_panel = QVoltagePanel()
-        self.side_tabs.addTab(self.voltage_controller_panel, "Voltage")
-        ### Accounts Panel
-        self.accounts_panel = QAccountPanel(parent=self.central_tabs)
-        self.side_tabs.addTab(self.accounts_panel, "Accounts")
-        ### Log Panel
-        self.log_panel = QLogPanel(parent=self.central_tabs)
-        self.side_tabs.addTab(self.log_panel, "Log")
-        self.side_tabs.setCurrentIndex(1)
+        self.voltage_controller_panel = QVoltagePanel(self.main_splitter)
 
         self.main_splitter.setStretchFactor(0, 8)
         self.main_splitter.setStretchFactor(1, 1)
@@ -206,69 +159,38 @@ class Quarky(QMainWindow):
         self.setCentralWidget(self.central_widget)
 
         self.setup_signals()
-        self.accounts_panel.load_accounts()
-
-    def setup_signals(self):
-        # Signal Connecting
-        self.start_experiment_button.clicked.connect(self.run_experiment)
-        self.stop_experiment_button.clicked.connect(self.load_experiment_file)
-        # self.load_config_button.clicked.connect(self.load_experiment_file) #TODO
-        self.load_experiment_button.clicked.connect(self.load_experiment_file)
-        self.load_data_button.clicked.connect(self.load_data_file)
-
-        self.central_tabs.currentChanged.connect(self.change_tab)
-        self.central_tabs.tabCloseRequested.connect(self.close_tab)
-
-        # Signals for rfsoc
-        self.accounts_panel.rfsoc_attempt_connection.connect(self.connect_rfsoc)
-        self.accounts_panel.rfsoc_disconnect.connect(self.disconnect_rfsoc)
-        self.rfsoc_connection_updated.connect(self.accounts_panel.rfsoc_connection_updated)
-
-        qInstallMessageHandler(self.log_panel.message_handler)
-        self.test_logging()
-
-    def test_logging(self):
-        print("test_logging")
-        qDebug("This is a debug message.")
-        qInfo("This is an info message.")
-        qWarning("This is a warning message!")
-        qCritical("This is a critical error!")
-        qInfo("---------------------------")
-
-    def disconnect_rfsoc(self):
-        self.soc = None
-        self.soccfg = None
+        if self.ip_address is not None:
+            self.connect_rfsoc(self.ip_address)
 
     def connect_rfsoc(self, ip_address):
         print("Attempting to connect to RFSoC")
 
         if ip_address is not None:
-            try:
-                self.soc, self.soccfg = makeProxy(ip_address) # should make separate thread
-            except Exception as e:
-                self.soc_connected = False
-                self.soc_status_label.setText('<html><b>✖ Soc Disconnected</b></html>')
-                QMessageBox.critical(None, "Error", "RfSoc connection to " + ip_address
-                                     + " failed: " + str(e))
-                self.rfsoc_connection_updated.emit(ip_address, 'failure')
-                return
-
+            self.soc, self.soccfg = makeProxy(ip_address)
             try:
                 print("Available methods:", self.soc._pyroMethods)
                 print("Configuration keys:", vars(self.soccfg))
             except Exception as e:
                 self.soc_connected = False
                 self.soc_status_label.setText('<html><b>✖ Soc Disconnected</b></html>')
-                QMessageBox.critical(None, "Error", "RfSoc connection to " + ip_address
-                                     + " failed: " + str(e))
-                self.rfsoc_connection_updated.emit(ip_address, 'failure')
+                QMessageBox.critical(None, "Error", "RfSoc connection failed: " + str(e))
                 return
             else:
                 self.soc_connected = True
                 self.soc_status_label.setText('<html><b>✔ Soc connected</b></html>')
-                self.rfsoc_connection_updated.emit(ip_address, 'success')
         else:
-            QMessageBox.critical(None, "Error", "RfSoc IP Address not given ")
+            QMessageBox.critical(None, "Error", "RfSoc ip Address not given ")
+
+    def setup_signals(self):
+        # Signal Connecting
+        self.start_experiment_button.clicked.connect(self.run_experiment)
+        self.stop_experiment_button.clicked.connect(self.load_experiment_file)
+        # self.load_config_button.clicked.connect(self.load_experiment_file)
+        self.load_experiment_button.clicked.connect(self.load_experiment_file)
+        self.load_data_button.clicked.connect(self.load_data_file)
+
+        self.central_tabs.currentChanged.connect(self.change_tab)
+        self.central_tabs.tabCloseRequested.connect(self.close_tab)
 
     def run_experiment(self):
         if self.soc_connected:
