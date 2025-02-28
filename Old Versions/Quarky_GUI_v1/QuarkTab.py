@@ -44,12 +44,12 @@ class QQuarkTab(QWidget):
         self.plot_layout.setObjectName("plot_layout")
 
         # Plot Button Toolbar
-        self.plot_toolbar = QVBoxLayout()
+        self.plot_toolbar = QVBoxLayout(self)
         self.plot_toolbar.setObjectName("plot_toolbar")
-        self.copy_plot_button = QToolButton()
+        self.copy_plot_button = QToolButton(self)
         self.copy_plot_button.setText("📋")
         self.copy_plot_button.setObjectName("copy_plot_button")
-        self.save_data_button = QToolButton()
+        self.save_data_button = QToolButton(self)
         self.save_data_button.setText("💾")
         self.save_data_button.setObjectName("save_data_button")
         self.coord_label = QLabel("X: ___\nY: ___")
