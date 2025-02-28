@@ -2,10 +2,12 @@
 <html class="no-js" lang="en" data-content_root="./">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <meta name="color-scheme" content="light dark"><link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" />
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="next" title="ExperimentThread Class" href="ExperimentThread.html" /><link rel="prev" title="Quarky Main" href="Quarky.html" />
 
-    <!-- Generated with Sphinx 7.4.7 and Furo 2024.08.06 --><title>Python Module Index - Quarky 1.0.0 documentation</title>
-<link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
+    <!-- Generated with Sphinx 7.4.7 and Furo 2024.08.06 -->
+        <title>QuarkTab Class - Quarky 1.0.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="_static/styles/furo-extensions.css?v=302659d7" />
     
@@ -176,7 +178,7 @@
           <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
         </button>
       </div>
-      <label class="toc-overlay-icon toc-header-icon no-toc" for="__toc">
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
         <div class="visually-hidden">Toggle table of contents sidebar</div>
         <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
       </label>
@@ -197,10 +199,10 @@
 </form>
 <div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
   <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
-<ul>
-<li class="toctree-l1 has-children"><a class="reference internal" href="quarky_modules.html">GUI Packages</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle navigation of GUI Packages</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<ul class="current">
+<li class="toctree-l1 current has-children"><a class="reference internal" href="quarky_modules.html">GUI Packages</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle navigation of GUI Packages</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="Quarky.html">Quarky Main</a></li>
-<li class="toctree-l2"><a class="reference internal" href="QuarkTab.html">QuarkTab Class</a></li>
+<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">QuarkTab Class</a></li>
 <li class="toctree-l2"><a class="reference internal" href="ExperimentThread.html">ExperimentThread Class</a></li>
 <li class="toctree-l2"><a class="reference internal" href="ConfigTreePanel.html">ConfigTreePanel Class</a></li>
 <li class="toctree-l2"><a class="reference internal" href="AccountsPanel.html">AccountsPanel Class</a></li>
@@ -228,7 +230,13 @@
           <span>Back to top</span>
         </a>
         <div class="content-icon-container">
-          <div class="theme-toggle-container theme-toggle-content">
+          <div class="view-this-page">
+  <a class="muted-link" href="_sources/QuarkTab.rst.txt" title="View this page">
+    <svg><use href="#svg-eye"></use></svg>
+    <span class="visually-hidden">View this page</span>
+  </a>
+</div>
+<div class="theme-toggle-container theme-toggle-content">
             <button class="theme-toggle">
               <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
               <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
@@ -237,94 +245,122 @@
               <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
             </button>
           </div>
-          <label class="toc-overlay-icon toc-content-icon no-toc" for="__toc">
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
             <div class="visually-hidden">Toggle table of contents sidebar</div>
             <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
           </label>
         </div>
         <article role="main" id="furo-main-content">
-          
-<section class="domainindex-section">
-  <h1>Python Module Index</h1>
-  <div class="domainindex-jumpbox"><a href="#cap-q"><strong>q</strong></a> | <a href="#cap-s"><strong>s</strong></a></div>
+          <section id="module-scripts.QuarkTab">
+<span id="quarktab-class"></span><h1>QuarkTab Class<a class="headerlink" href="#module-scripts.QuarkTab" title="Link to this heading">¶</a></h1>
+<section id="quarkytab-py">
+<h2>QuarkyTab.py<a class="headerlink" href="#quarkytab-py" title="Link to this heading">¶</a></h2>
+<p>The custom QQuarkTab class for the central tabs module of the main application.</p>
+<p>Each QQuarkTab is either an experiment tab or a data tab that stores its own object attributes, configuration,
+data, and plotting.</p>
 </section>
-<table class="domainindex-table">
-  <tr class="pcap">
-    <td></td><td>&#160;</td><td></td>
-  </tr>
-  <tr class="cap" id="cap-q">
-    <td></td><td><strong>q</strong></td><td></td>
-  </tr>
-  <tr>
-    <td></td>
-    <td>
-        <a href="generated/Quarky.html#module-Quarky"><code class="xref">Quarky</code></a></td><td>
-    <em></em></td>
-  </tr>
-  <tr class="pcap">
-    <td></td><td>&#160;</td><td></td>
-  </tr>
-  <tr class="cap" id="cap-s">
-    <td></td><td><strong>s</strong></td><td></td>
-  </tr>
-  <tr>
-    <td><img src="_static/minus.png" class="toggler"
-              id="toggle-1" style="display: none" alt="-" /></td>
-    <td>
-        <code class="xref">scripts</code></td><td>
-    <em></em></td>
-  </tr>
-  <tr class="cg-1">
-    <td></td>
-    <td>&#160;&#160;&#160;
-        <a href="AccountsPanel.html#module-scripts.AccountsPanel"><code class="xref">scripts.AccountsPanel</code></a></td><td>
-    <em></em></td>
-  </tr>
-  <tr class="cg-1">
-    <td></td>
-    <td>&#160;&#160;&#160;
-        <a href="ConfigTreePanel.html#module-scripts.ConfigTreePanel"><code class="xref">scripts.ConfigTreePanel</code></a></td><td>
-    <em></em></td>
-  </tr>
-  <tr class="cg-1">
-    <td></td>
-    <td>&#160;&#160;&#160;
-        <a href="ExperimentThread.html#module-scripts.ExperimentThread"><code class="xref">scripts.ExperimentThread</code></a></td><td>
-    <em></em></td>
-  </tr>
-  <tr class="cg-1">
-    <td></td>
-    <td>&#160;&#160;&#160;
-        <a href="Helpers.html#module-scripts.Helpers"><code class="xref">scripts.Helpers</code></a></td><td>
-    <em></em></td>
-  </tr>
-  <tr class="cg-1">
-    <td></td>
-    <td>&#160;&#160;&#160;
-        <a href="LogPanel.html#module-scripts.LogPanel"><code class="xref">scripts.LogPanel</code></a></td><td>
-    <em></em></td>
-  </tr>
-  <tr class="cg-1">
-    <td></td>
-    <td>&#160;&#160;&#160;
-        <a href="QuarkTab.html#module-scripts.QuarkTab"><code class="xref">scripts.QuarkTab</code></a></td><td>
-    <em></em></td>
-  </tr>
-  <tr class="cg-1">
-    <td></td>
-    <td>&#160;&#160;&#160;
-        <a href="VoltagePanel.html#module-scripts.VoltagePanel"><code class="xref">scripts.VoltagePanel</code></a></td><td>
-    <em></em></td>
-  </tr>
-</table>
+<dl class="py class">
+<dt class="sig sig-object py" id="scripts.QuarkTab.QQuarkTab">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">scripts.QuarkTab.</span></span><span class="sig-name descname"><span class="pre">QQuarkTab</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">experiment_obj</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tab_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_experiment</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dataset_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#scripts.QuarkTab.QQuarkTab" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">QWidget</span></code></p>
+<p>The class for QQuarkTabs that make up the central tabular module.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="scripts.QuarkTab.QQuarkTab.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">experiment_obj</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tab_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_experiment</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dataset_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#scripts.QuarkTab.QQuarkTab.__init__" title="Link to this definition">¶</a></dt>
+<dd><p>Initializes an instance of a QQuarkTab widget.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>experiment_obj</strong> (<em>Experiment Module</em>) – The experiment module object extracted from an experiment file.</p></li>
+<li><p><strong>tab_name</strong> (<em>str</em>) – The name of the tab widget.</p></li>
+<li><p><strong>is_experiment</strong> (<em>bool</em>) – Whether the tab corresponds to an experiment or dataset.</p></li>
+<li><p><strong>dataset_file</strong> (<em>str</em>) – The path to the dataset file.</p></li>
+</ul>
+</dd>
+</dl>
+<p><strong>Important Attributes:</strong></p>
+<ul class="simple">
+<li><p>experiment_obj (Experiment Module): The experiment module object that was passed.</p></li>
+<li><p>experiment_instance (Experiment Class): An initialized instance of the experiment module with the config.</p></li>
+<li><p>config (dict): The configuration of the QQuarkTab experiment/dataset.</p></li>
+<li><p>data (dict): The data of the QQuarkTab experiment/dataset.</p></li>
+<li><p>plots (pyqtgraph.PlotWidget[]): Array of the pyqtgraph plots of the data.</p></li>
+<li><p>plot_widget (pyqtgraph.GraphicsLayoutWidget): The graphics layout of the plotting area</p></li>
+</ul>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="scripts.QuarkTab.QQuarkTab.clear_plots">
+<span class="sig-name descname"><span class="pre">clear_plots</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#scripts.QuarkTab.QQuarkTab.clear_plots" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="scripts.QuarkTab.QQuarkTab.extract_experiment_instance">
+<span class="sig-name descname"><span class="pre">extract_experiment_instance</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#scripts.QuarkTab.QQuarkTab.extract_experiment_instance" title="Link to this definition">¶</a></dt>
+<dd><p>From the experiment module of the specific tab, find the correct class to make an instance of.
+TODO: Based on the Experiment Class to-be set.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="scripts.QuarkTab.QQuarkTab.load_dataset_file">
+<span class="sig-name descname"><span class="pre">load_dataset_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataset_file</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#scripts.QuarkTab.QQuarkTab.load_dataset_file" title="Link to this definition">¶</a></dt>
+<dd><p>Takes the dataset file and loads the dict, before calling the plotter.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>dataset_file</strong> (<em>str</em>) – The path to the dataset file.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="scripts.QuarkTab.QQuarkTab.plot_data">
+<span class="sig-name descname"><span class="pre">plot_data</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#scripts.QuarkTab.QQuarkTab.plot_data" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="scripts.QuarkTab.QQuarkTab.process_data">
+<span class="sig-name descname"><span class="pre">process_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#scripts.QuarkTab.QQuarkTab.process_data" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="scripts.QuarkTab.QQuarkTab.update_coordinates">
+<span class="sig-name descname"><span class="pre">update_coordinates</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pos</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#scripts.QuarkTab.QQuarkTab.update_coordinates" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="scripts.QuarkTab.QQuarkTab.update_data">
+<span class="sig-name descname"><span class="pre">update_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#scripts.QuarkTab.QQuarkTab.update_data" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
 
         </article>
       </div>
       <footer>
         
         <div class="related-pages">
-          
-          
+          <a class="next-page" href="ExperimentThread.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">ExperimentThread Class</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="Quarky.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">Quarky Main</div>
+                
+              </div>
+            </a>
         </div>
         <div class="bottom-of-page">
           <div class="left-details">
@@ -343,8 +379,38 @@
         
       </footer>
     </div>
-    <aside class="toc-drawer no-toc">
+    <aside class="toc-drawer">
       
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">QuarkTab Class</a><ul>
+<li><a class="reference internal" href="#quarkytab-py">QuarkyTab.py</a></li>
+<li><a class="reference internal" href="#scripts.QuarkTab.QQuarkTab"><code class="docutils literal notranslate"><span class="pre">QQuarkTab</span></code></a><ul>
+<li><a class="reference internal" href="#scripts.QuarkTab.QQuarkTab.__init__"><code class="docutils literal notranslate"><span class="pre">QQuarkTab.__init__()</span></code></a></li>
+<li><a class="reference internal" href="#scripts.QuarkTab.QQuarkTab.clear_plots"><code class="docutils literal notranslate"><span class="pre">QQuarkTab.clear_plots()</span></code></a></li>
+<li><a class="reference internal" href="#scripts.QuarkTab.QQuarkTab.extract_experiment_instance"><code class="docutils literal notranslate"><span class="pre">QQuarkTab.extract_experiment_instance()</span></code></a></li>
+<li><a class="reference internal" href="#scripts.QuarkTab.QQuarkTab.load_dataset_file"><code class="docutils literal notranslate"><span class="pre">QQuarkTab.load_dataset_file()</span></code></a></li>
+<li><a class="reference internal" href="#scripts.QuarkTab.QQuarkTab.plot_data"><code class="docutils literal notranslate"><span class="pre">QQuarkTab.plot_data()</span></code></a></li>
+<li><a class="reference internal" href="#scripts.QuarkTab.QQuarkTab.process_data"><code class="docutils literal notranslate"><span class="pre">QQuarkTab.process_data()</span></code></a></li>
+<li><a class="reference internal" href="#scripts.QuarkTab.QQuarkTab.update_coordinates"><code class="docutils literal notranslate"><span class="pre">QQuarkTab.update_coordinates()</span></code></a></li>
+<li><a class="reference internal" href="#scripts.QuarkTab.QQuarkTab.update_data"><code class="docutils literal notranslate"><span class="pre">QQuarkTab.update_data()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
       
       
     </aside>
