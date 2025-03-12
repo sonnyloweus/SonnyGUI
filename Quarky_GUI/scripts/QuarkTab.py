@@ -8,10 +8,19 @@ Each QQuarkTab is either an experiment tab or a data tab that stores its own obj
 data, and plotting.
 """
 
-import inspect
+import os
+import json
+import h5py
+from pathlib import Path
+import datetime
+import shutil
+
 import numpy as np
-from PyQt5.QtCore import Qt, QSize, qCritical, QRect
+from PyQt5.QtCore import (
+    Qt, QSize, qCritical, qInfo, qDebug, QRect, QTimer
+)
 from PyQt5.QtWidgets import (
+    QApplication,
     QWidget,
     QVBoxLayout,
     QHBoxLayout,
@@ -20,10 +29,13 @@ from PyQt5.QtWidgets import (
     QMessageBox,
     QLabel,
     QComboBox,
+    QFileDialog,
 )
 import pyqtgraph as pg
+from fontTools.ttx import process
 
 from scripts.Init.initialize import BaseConfig
+from scripts.ExperimentObject import ExperimentObject
 import scripts.Helpers as Helpers
 
 class QQuarkTab(QWidget):
@@ -31,7 +43,7 @@ class QQuarkTab(QWidget):
     The class for QQuarkTabs that make up the central tabular module.
     """
 
-    def __init__(self, experiment_obj=None, tab_name=None, is_experiment=True, dataset_file=None):
+    def __init__(self, experiment_module=None, tab_name=None, is_experiment=None, dataset_file=None):
         """
         Initializes an instance of a QQuarkTab widget.
 
@@ -47,7 +59,6 @@ class QQuarkTab(QWidget):
         **Important Attributes:**
 
         * experiment_obj (Experiment Module): The experiment module object that was passed.
-        * experiment_instance (Experiment Class): An initialized instance of the experiment module with the config.
         * config (dict): The configuration of the QQuarkTab experiment/dataset.
         * data (dict): The data of the QQuarkTab experiment/dataset.
         * plots (pyqtgraph.PlotWidget[]): Array of the pyqtgraph plots of the data.
@@ -57,55 +68,49 @@ class QQuarkTab(QWidget):
         super().__init__()
 
         ### Experiment Variables
-        self.experiment_obj = experiment_obj
-        self.tab_name = str(tab_name)
         self.config = {"Experiment Config": {}, "Base Config": BaseConfig} # default conifg found in initializ.py
+        self.tab_name = str(tab_name)
+        self.experiment_obj = None if experiment_module is None else ExperimentObject(self, self.tab_name, experiment_module)
         self.is_experiment = is_experiment
+        self.dataset_file = dataset_file
         self.data = None
-        self.experiment_instance = None  # The actual experiment instance
         self.plots = []
-
-        self.experiment_type = None # Not currently used
-
-        # Can specify an alternative colormap (e.g., 'viridis', 'inferno', etc.)
-        cmap = pg.colormap.get('viridis')
-        self.lut = cmap.getLookupTable()
+        self.output_dir = None
 
         ### Setting up the Tab
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
 
         ### Plotter within Tab
         self.plot_layout = QVBoxLayout(self)
-        self.plot_layout.setContentsMargins(5, 0, 5, 0)
+        self.plot_layout.setContentsMargins(5, 5, 5, 0)
         self.plot_layout.setSpacing(0)
         self.plot_layout.setObjectName("plot_layout")
 
         ### Plot Utilities Bar
         self.plot_utilities_container = QWidget()
-        self.plot_utilities_container.setMaximumHeight(35)
+        self.plot_utilities_container.setMaximumHeight(30)
         self.plot_utilities = QHBoxLayout(self.plot_utilities_container)
         self.plot_utilities.setContentsMargins(0, 0, 0, 0)
-        self.plot_utilities.setSpacing(5)
+        self.plot_utilities.setSpacing(3)
         self.plot_utilities.setObjectName("plot_utilities")
-        self.copy_plot_button = Helpers.create_button("Copy", "copy_plot_button", True)
-        self.save_data_button = Helpers.create_button("Save", "save_data_button", True)
-        spacerItem = QSpacerItem(0, 30, QSizePolicy.Expanding, QSizePolicy.Expanding) # spacer
-        self.plot_method_label = QLabel("Plot Method: ")  # coordinate of the mouse over the current plot
-        self.plot_method_label.setStyleSheet("font-size: 10px;")
-        self.plot_method_label.setObjectName("coord_label")
-        self.plot_method_combo = QComboBox()
-        self.plot_method_combo.setGeometry(QRect(10, 10, 150, 26))
+        self.snip_plot_button = Helpers.create_button("Snip", "snip_plot_button", True, self.plot_utilities_container)
+        self.export_data_button = Helpers.create_button("Export", "export_data_button", True, self.plot_utilities_container)
+        self.output_dir_button = Helpers.create_button("Output Dir", "output_dir_button", True, self.plot_utilities_container)
+        self.plot_method_combo = QComboBox(self.plot_utilities_container)
+        self.plot_method_combo.setFixedWidth(150)
         self.plot_method_combo.setObjectName("plot_method_combo")
-        self.plot_method_combo.addItems(["Auto (default)"]) # Plotting Options Dropdown
-        self.coord_label = QLabel("X: ___ Y: ___")  # coordinate of the mouse over the current plot
-        self.coord_label.setFixedWidth(100)
+        self.coord_label = QLabel("X: _____ Y: _____")  # coordinate of the mouse over the current plot
+        self.coord_label.setAlignment(Qt.AlignRight)
         self.coord_label.setStyleSheet("font-size: 10px;")
         self.coord_label.setObjectName("coord_label")
 
-        self.plot_utilities.addWidget(self.copy_plot_button)
-        self.plot_utilities.addWidget(self.save_data_button)
-        self.plot_utilities.addItem(spacerItem)
-        self.plot_utilities.addWidget(self.plot_method_label)
+        self.export_data_button.setEnabled(False)
+        self.output_dir_button.setEnabled(False)
+
+        spacerItem = QSpacerItem(0, 30, QSizePolicy.Expanding, QSizePolicy.Fixed)  # spacer
+        self.plot_utilities.addWidget(self.snip_plot_button)
+        self.plot_utilities.addWidget(self.export_data_button)
+        self.plot_utilities.addWidget(self.output_dir_button)
         self.plot_utilities.addWidget(self.plot_method_combo)
         self.plot_utilities.addItem(spacerItem)
         self.plot_utilities.addWidget(self.coord_label)
@@ -125,17 +130,35 @@ class QQuarkTab(QWidget):
         self.plot_layout.setStretch(1, 10)
 
         self.setLayout(self.plot_layout)
+        self.setup_plotter_options()
         self.setup_signals()
 
-        # either extract experiment instance of the dataset file depending on the tab type
-        if self.is_experiment and self.experiment_obj is not None:
-            self.extract_experiment_instance()
-        elif not self.is_experiment and dataset_file is not None:
-            self.load_dataset_file(dataset_file)
+        # extract dataset file depending on the tab type being a dataset
+        if not self.is_experiment and self.dataset_file is not None:
+            self.load_dataset_file(self.dataset_file)
 
     def setup_signals(self):
         # self.plot_method_combo.currentIndexChanged.connect(self.plot_method_changed)
         self.plot_widget.scene().sigMouseMoved.connect(self.update_coordinates) # coordinates viewer
+        self.snip_plot_button.clicked.connect(self.capture_plot_to_clipboard)
+        self.export_data_button.clicked.connect(self.export_data)
+        self.output_dir_button.clicked.connect(self.change_output_dir)
+
+        if self.is_experiment:
+            self.output_dir_button.setEnabled(True)
+            self.output_dir = os.path.join(os.path.abspath(""), "data")
+            qInfo("Default output_dir for " + self.tab_name + " is at: " + str(self.output_dir))
+            if not Path(self.output_dir).is_dir():
+                os.mkdir(self.output_dir)
+        if self.tab_name != "None":
+            self.export_data_button.setEnabled(True)
+
+    def setup_plotter_options(self):
+        self.plot_method_combo.addItems(["Plot: Auto"])
+        if self.is_experiment and self.experiment_obj is not None:
+            if self.experiment_obj.experiment_plotter is not None:
+                self.plot_method_combo.addItems(["Plot: " + self.tab_name])
+                self.plot_method_combo.setCurrentText("Plot: " + self.tab_name)
 
     def load_dataset_file(self, dataset_file):
         """
@@ -147,42 +170,6 @@ class QQuarkTab(QWidget):
 
         self.data = Helpers.h5_to_dict(dataset_file)
         self.plot_data()
-
-    def extract_experiment_instance(self):
-        """
-        From the experiment module of the specific tab, find the correct class to make an instance of.
-
-        TODO: Based on the Experiment Class to-be set.
-        """
-
-        ############ Need to Revamp after Experiment Class set ############
-        # Loop through all members (classes) of the experiment module to find the matching one
-        for name, obj, in inspect.getmembers(self.experiment_obj):
-            if name == self.tab_name:
-                if inspect.isclass(obj):
-                    print("found class instance: " + name)
-
-                    ### create instance of experiment
-                    self.experiment_instance = obj
-
-                    ### set the config
-                    if (not hasattr(self.experiment_instance, "config_template")
-                            or self.experiment_instance.config_template is None):
-                        QMessageBox.critical(None, "Error", "No Config Template given.")
-                    ############ HANDLE CONFIG ERROR HANDLING #############
-                    else:
-                        self.config["Experiment Config"] = self.experiment_instance.config_template
-
-                    # HANDLE EXPERIMENT TYPE????
-                    self.experiment_type = None
-                    ### check what kind of experiment class it is
-                    return
-
-        # Verify experiment_instance
-        if self.experiment_instance is None:
-            qCritical("No Experiment Class instance found within the module give. Must adhere to the experiment " +
-                      "class template provided.")
-            QMessageBox.critical(None, "Error", "No Experiment Class Found.")
 
     def clear_plots(self):
         """
@@ -207,21 +194,40 @@ class QQuarkTab(QWidget):
                 self.plot_widget.setCursor(Qt.CrossCursor) # make cursor cross-hairs
                 mouse_point = vb.mapSceneToView(pos) # translate location to axis coordinates
                 x, y = mouse_point.x(), mouse_point.y()
-                self.coord_label.setText(f"X: {x:.2f} Y: {y:.2f}")
+                self.coord_label.setText(f"X: {x:.5f} Y: {y:.5f}")
                 break
+
+    def capture_plot_to_clipboard(self):
+        # Capture screenshot of the plot_widget
+        pixmap = self.plot_widget.grab()  # This grabs the content of the plot_widget
+        clipboard = QApplication.clipboard()
+        clipboard.setPixmap(pixmap)
+        qInfo("Current graph snipped to clipboard!")
+
+        self.snip_plot_button.setText('Done!')
+        QTimer.singleShot(3000, lambda: self.snip_plot_button.setText('Snip'))
 
     def plot_data(self):
         """
-        Plots the data of the QQuarkTab experiment/dataset.
+        Plots the data of the QQuarkTab experiment/dataset using prepared data that is prepared by
+        the specified plotting method of the dropdown menu.
         """
 
-        plotting_method = self.plot_method_combo.currentText() # Get the Plotting Method
-
-        if plotting_method != "Auto (default)":
-            return
-
         self.clear_plots()
-        num_plots = 0
+        self.plots = []
+
+        plotting_method = self.plot_method_combo.currentText()[6:] # Get the Plotting Method
+        if plotting_method == "Auto": # Use auto preparation
+            self.auto_plot_prepare()
+        elif plotting_method == self.tab_name: # Use the experiment's preparation
+            self.experiment_obj.experiment_plotter(self.plot_widget, self.plots, self.data)
+
+    def auto_plot_prepare(self):
+        """
+        Automatically prepares the data based on its shape. (Not always correct but tries to infer)
+        """
+        prepared_data = {"plots": [], "images": [], "columns": []}
+
         f = self.data
         if 'data' in self.data:
             f = self.data['data']
@@ -232,45 +238,101 @@ class QQuarkTab(QWidget):
                 data = np.array(data[0][0])
             shape = data.shape
 
-            # 1D data -> 2D Plots
+            # Handle 1D data -> 2D Plots
             if len(shape) == 1:
                 x_data = None
                 if 'x_pts' in f:
                     x_data = list(f['x_pts'])
-                    # Iterate through all keys in the file
                     if name == 'x_pts':
                         continue
                     y_data = list(data)
                     if len(x_data) == len(y_data):
-                        num_plots += 1
-                        plot = self.plot_widget.addPlot()
-                        plot.plot(x_data, y_data, pen=None, symbol='o', symbolSize=3, symbolBrush='b',
-                                  name=name)  # Scatter plot
-                        plot.setLabel("left", name)
-                        plot.showGrid(x=True, y=True)
-                        self.plots.append(plot)
-                        self.plot_widget.nextRow()
+                        prepared_data["plots"].append({
+                            "x": x_data,
+                            "y": y_data,
+                            "label": name,
+                            "xlabel": "Qubit Frequency (GHz)",
+                            "ylabel": "a.u."
+                        })
+            # Handle 3D data -> Column Plots (you can define a specific format for 3D data)
+            elif len(shape) == 2 and shape[1] == 2:
+                prepared_data["columns"].append({
+                    "data": data,
+                    "label": name,
+                    "xlabel": "X-axis",
+                    "ylabel": "Y-axis"
+                })
+            # Handle 2D data -> Image Plots (e.g., heatmaps, spectrograms)
             elif len(shape) == 2:
-                num_plots += 1
-                plot = self.plot_widget.addPlot(title=name)
-                # 2-column data -> IQ scatter plot
-                if shape[1] == 2:
-                    plot.plot(data[:, 0], data[:, 1], pen=None, symbol="o")
+                prepared_data["images"].append({
+                    "data": data,
+                    "label": name,
+                    "xlabel": "X-axis",
+                    "ylabel": "Y-axis",
+                    "colormap": "inferno"
+                })
+
+        # Create the plots
+        if "plots" in prepared_data:
+            for i, plot in enumerate(prepared_data["plots"]):
+                p = self.plot_widget.addPlot(title=plot["label"])
+                p.addLegend()
+                p.plot(plot["x"], plot["y"], pen='b', symbol='o', symbolSize=5, symbolBrush='b')
+                p.setLabel('bottom', plot["xlabel"])
+                p.setLabel('left', plot["ylabel"])
+                self.plots.append(p)
+                self.plot_widget.nextRow()
+
+        if "images" in prepared_data:
+            for i, img in enumerate(prepared_data["images"]):
+                # Create PlotItem
+                p = self.plot_widget.addPlot(title=img["label"])
+                p.setLabel('bottom', img["xlabel"])
+                p.setLabel('left', img["ylabel"])
+                p.showGrid(x=True, y=True)
+
+                # Create ImageItem
+                image_item = pg.ImageItem(img["data"].T)
+                p.addItem(image_item)
+                color_map = pg.colormap.get(img["colormap"])  # e.g., 'viridis'
+                image_item.setLookupTable(color_map.getLookupTable())
+
+                # Create ColorBarItem
+                color_bar = pg.ColorBarItem(values=(image_item.image.min(), image_item.image.max()),
+                                            colorMap=color_map)
+                color_bar.setImageItem(image_item, insert_in=p)  # Add color bar to the plot
+
+                self.plots.append(p)
+                if len(self.plots) % 2 == 0: self.plot_widget.nextRow()
+
+        if "columns" in prepared_data:
+            for i, column in enumerate(prepared_data["columns"]):
+                x_data = column["data"][:, 0]  # X-values (real part)
+                y_data = column["data"][:, 1]  # Y-values (imaginary part)
+
+                # Create PlotItem for IQ plot
+                p = self.plot_widget.addPlot(title=column["label"])
+                p.setLabel('bottom', column["xlabel"])
+                p.setLabel('left', column["ylabel"])
+
+                # Plot the scatter plot (IQ plot)
+                p.plot(x_data, y_data, pen=None, symbol='o', symbolSize=5, symbolBrush='b')
+
+                self.plots.append(p)
+                if len(self.plots) % 2 == 0:  # Move to next row every 2 plots
                     self.plot_widget.nextRow()
-                # General 2D data -> Heatmap
-                else:
-                    img = pg.ImageItem(data.T)  # Transpose for correct orientation
-                    img.setLookupTable(self.lut)
-                    plot.addItem(img)
-                    if num_plots % 2 == 0:
-                        self.plot_widget.nextRow()
-                self.plots.append(plot)
-        # print("plotted", self.data)
+        return
 
     def process_data(self, data):
+        """
+        Processes the dataset usually in the form of averaging.
+
+        :param data: The data to be processed.
+        :type data: dict
+        """
         self.data = data
 
-        ### check what set number is being run
+        # check what set number is being run and average the data
         set_num = data['data']['set_num']
         if set_num == 0:
             self.data_cur = data
@@ -282,16 +344,6 @@ class QQuarkTab(QWidget):
         self.data['data']['avgi'][0][0] = self.data_cur['data']['avgi'][0][0]
         self.data['data']['avgq'][0][0] = self.data_cur['data']['avgq'][0][0]
 
-        ### create a diction to feed into the plot widget for labels
-        # plot_labels = {
-        #     "x label": self.experiment.cfg["x_pts_label"],
-        #     "y label": self.experiment.cfg["y_pts_label"],
-        # }
-        ### check for if the y label is none (for single varible sweep) and set the y label to I/Q or amp/phase
-        # if plot_labels["y label"] == None:
-        #     plot_labels["y label 1"] = "I (a.u.)"
-        #     plot_labels["y label 2"] = "Q (a.u.)"
-
     def update_data(self, data):
         """
         Is the slot for the emission of data from the experiment thread.
@@ -300,3 +352,98 @@ class QQuarkTab(QWidget):
 
         self.process_data(data)
         self.plot_data()
+        self.save_data()
+
+    def export_data(self):
+        self.prepare_file_naming()
+        self.save_data()
+
+        self.export_data_button.setText('Done!')
+        QTimer.singleShot(3000, lambda: self.export_data_button.setText('Export'))
+
+    def change_output_dir(self):
+        self.output_dir = QFileDialog.getExistingDirectory(self, "Select Folder for Autosave", self.output_dir)
+        qInfo("Output directory for experiment data changed to: " + self.output_dir)
+
+        self.output_dir_button.setText('Changed!')
+        QTimer.singleShot(3000, lambda: self.output_dir_button.setText('Output Dir'))
+
+    def prepare_file_naming(self):
+        # Setting up variables necessary for saving data files
+        date_time_now = datetime.datetime.now()
+        date_time_string = date_time_now.strftime("%Y_%m_%d_%H_%M_%S")
+        date_string = date_time_now.strftime("%Y_%m_%d")
+
+        if not self.is_experiment and self.dataset_file is not None:
+            path_obj = Path(self.dataset_file)
+            self.folder_name = "data" + "_" + date_string
+            self.file_name = path_obj.stem
+        elif self.is_experiment:
+            self.folder_name = self.tab_name + "_" + date_string
+            self.file_name = self.tab_name + "_" + date_time_string
+
+    def save_data(self):
+        if not hasattr(self, 'file_name') or not hasattr(self, 'folder_name'):
+            self.prepare_file_naming()
+
+        if not self.is_experiment:
+            folder_path = QFileDialog.getExistingDirectory(self, "Select Folder to Save Dataset")
+            folder_path = Path(os.path.join(folder_path, self.folder_name))
+            if not folder_path.is_dir():
+                folder_path.mkdir(parents=True, exist_ok=True)
+
+            if folder_path:
+                try:
+                    shutil.copy2(self.dataset_file, folder_path)
+                    pixmap = self.plot_widget.grab()
+                    file_path = os.path.join(folder_path, self.file_name + ".png")
+                    pixmap.save(file_path)
+                    qInfo("Saved dataset to " + str(folder_path))
+                except Exception as e:
+                    qCritical(f"Failed to save the dataset to {file_path}: {str(e)}")
+                    QMessageBox.critical(self, "Error", f"Failed to save dataset.")
+
+        elif self.is_experiment:
+            date_time_now = datetime.datetime.now()
+            date_time_string = date_time_now.strftime("%Y_%m_%d_%H_%M_%S")
+            data_filename = os.path.join(self.output_dir + "/" + self.tab_name, self.folder_name, self.file_name + '.h5')
+            config_filename = os.path.join(self.output_dir + "/" + self.tab_name, self.folder_name, self.file_name + '.json')
+            image_filename = os.path.join(self.output_dir + "/" + self.tab_name, self.folder_name, self.file_name + '.png')
+
+            # Make directories if they don't already exist
+            if not Path(self.output_dir + "/" + self.tab_name).is_dir():
+                os.mkdir(self.output_dir + "/" + self.tab_name)
+            if not Path(os.path.join(self.output_dir + "/" + self.tab_name, self.folder_name)).is_dir():
+                os.mkdir(os.path.join(self.output_dir + "/" + self.tab_name, self.folder_name))
+
+            # Save dataset
+            data_file = h5py.File(data_filename, 'w')  # Create file if does not exist, truncate mode if exists
+            if isinstance(self.data, dict) and 'data' in self.data and isinstance(self.data['data'], dict):
+                for key, datum in self.data['data'].items():
+                    datum = np.array(datum)
+                    try:
+                        data_file.create_dataset(key, shape=datum.shape,
+                                                 maxshape=tuple([None] * len(datum.shape)),
+                                                 dtype=str(datum.astype(np.float64).dtype))
+                    except RuntimeError as e:
+                        qCritical(f"Failed to save the dataset to {data_filename}: {str(e)}")
+                        del data_file[key]
+                    data_file[key][...] = datum
+            data_file.close()
+
+            # Save config
+            try:
+                with open(config_filename, "w") as json_file:
+                    json.dump(self.config, json_file, indent=4)
+            except Exception as e:
+                qCritical(f"Failed to save the configuration to {config_filename}: {str(e)}")
+
+            # Save image
+            try:
+                pixmap = self.plot_widget.grab()
+                pixmap.save(image_filename, "PNG")
+            except Exception as e:
+                qCritical(f"Failed to save the plot image to {image_filename}: {str(e)}")
+
+            qDebug("Data export attempted at " + date_time_string +
+                  " to: " + self.output_dir + "/" + self.tab_name + "/" + self.folder_name)

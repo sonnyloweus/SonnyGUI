@@ -36,28 +36,20 @@ class ExperimentThread(QObject):
         ### loop over all the sets for the data taking
         while self.running and idx_set < self.config["sets"]:
 
-            #### check what kind of experiment it is
-            if issubclass(type(self.experiment_instance), AveragerProgram):
-                qWarning("I can't handle AveragerProgram yet!")
-                return
-                ### if Averager class, need to loop over variables
-            elif issubclass(type(self.experiment_instance), RAveragerProgram):
+            try:
+                data = self.experiment_instance.acquire()
+                data['data']['set_num'] = idx_set
+            except Exception as e:
+                self.RFSOC_error.emit(e)
+                self.finished.emit()
+                return # Do not want to update data -- no new data was recorded!
 
-                try:
-                    x_pts, avgi, avgq = self.experiment_instance.acquire(self.soc)
-                except Exception as e:
-                    self.RFSOC_error.emit(e)
-                    self.finished.emit()
-                    return # Do not want to update data -- no new data was recorded!
-                data = {'config': self.config, 'data': {'x_pts': x_pts, 'avgi': avgi, 'avgq': avgq, 'set_num': idx_set}}
-
-            # Emit the signal with new data
+            # Emit the signal with new data and update the progress bar with additional set complete
             self.updateData.emit(data)
-            # Update the setsComplete bar
             self.updateProgress.emit(idx_set + 1)
-            self.finished.emit()
-
             idx_set += 1
+
+        self.finished.emit()
 
     def stop(self):
         self.running = False

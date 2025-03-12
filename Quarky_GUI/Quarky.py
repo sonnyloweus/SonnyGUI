@@ -8,14 +8,15 @@ This module initializes the GUI, handles application-level logic, and manages in
 different components.
 """
 
-# TODO: Experiment Class Plotter
-# TODO: include legend for plotter
-# TODO: Saving Data Files, Screenshotting
+# TODO: Saving Data Files
+# TODO: re-retrieve module (refresh button)
+
+# TODO: Experiment run time estimate (in the experiment file)
 # TODO: Make a separate thread for proxy connections
+
 
 import sys, os
 import math
-import datetime
 from pathlib import Path
 from PyQt5.QtCore import (
     Qt, QSize, QThread, pyqtSignal, qInstallMessageHandler, qDebug,
@@ -225,7 +226,7 @@ class Quarky(QMainWindow):
 
         # Connecting the top bar buttons to their respective functions
         self.start_experiment_button.clicked.connect(self.run_experiment)
-        self.stop_experiment_button.clicked.connect(self.load_experiment_file)
+        self.stop_experiment_button.clicked.connect(self.stop_experiment)
         self.load_experiment_button.clicked.connect(self.load_experiment_file)
         self.load_data_button.clicked.connect(self.load_data_file)
 
@@ -241,7 +242,7 @@ class Quarky(QMainWindow):
 
         # Log message handler installation
         qInstallMessageHandler(self.log_panel.message_handler)
-        self.test_logging()
+        # self.test_logging()
 
     def test_logging(self):
         """
@@ -285,8 +286,8 @@ class Quarky(QMainWindow):
 
             # Verifying RFSoc connection
             try:
-                print("Available methods:", self.soc._pyroMethods)
-                print("Configuration keys:", vars(self.soccfg))
+                qInfo("RFSoC Info: " + str(self.soccfg))
+                # print("Available Methods:", self.soc._pyroMethods)
             except Exception as e:
                 # Connection invalid despite makeProxy success
                 self.disconnect_rfsoc()
@@ -324,23 +325,16 @@ class Quarky(QMainWindow):
             BaseConfig = self.config_tree_panel.config["Base Config"]
             config = self.current_tab.config = BaseConfig | UpdateConfig # symmetric difference and intersection
 
-            #########################################################################
-            ### TODO: Setting up directories, filenames, and other things to be saved
-            #########################################################################
-            # Setting up variables necessary for saving data files, probably move to QuarkTab
-            experiment_name = self.current_tab.tab_name
-            date_time_now = datetime.datetime.now()
-            date_time_string = date_time_now.strftime("%Y_%m_%d_%H_%M_%S")
-            date_string = date_time_now.strftime("%Y_%m_%d")
-
             # Create experiment object using updated config and current tab's experiment instance
-            experiment_instance = self.current_tab.experiment_instance
-            self.experiment = experiment_instance(self.soccfg, config)
+            experiment_class = self.current_tab.experiment_obj.experiment_class
+            self.experiment_instance = experiment_class(soc=self.soc, soccfg=self.soccfg, cfg=config)
+
             # Creating the experiment worker from ExperimentThread
-            self.experiment_worker = ExperimentThread(config, soccfg=self.soccfg, exp=self.experiment, soc=self.soc)
+            self.experiment_worker = ExperimentThread(config, soccfg=self.soccfg, exp=self.experiment_instance, soc=self.soc)
             self.experiment_worker.moveToThread(self.thread) # Move the ExperimentThread onto the actual QThread
 
             # Connecting started and finished signals
+            self.thread.started.connect(self.current_tab.prepare_file_naming)
             self.thread.started.connect(self.experiment_worker.run) # run experiment
             self.experiment_worker.finished.connect(self.thread.quit) # stop thread
             self.experiment_worker.finished.connect(self.experiment_worker.deleteLater) # delete worker
@@ -353,13 +347,14 @@ class Quarky(QMainWindow):
             self.experiment_worker.RFSOC_error.connect(self.RFSOC_error) # connect any RFSoC errors
 
             # button and GUI updates
-            self.experiment_progress_bar.setProperty("value", 1)
+            self.update_progress(0)
+            self.experiment_progress_bar.setValue(1)
             self.start_experiment_button.setEnabled(False)
             self.stop_experiment_button.setEnabled(True)
 
             self.thread.start()
         else:
-            qCritical("The RfSoC instance is not yet connected. Current soc has the value: " + self.soc)
+            qCritical("The RfSoC instance is not yet connected. Current soc has the value: " + str(self.soc))
             QMessageBox.critical(None, "Error", "RfSoC Disconnected.")
             return
 
@@ -370,9 +365,11 @@ class Quarky(QMainWindow):
 
         if self.experiment_worker:
             self.experiment_worker.stop()
+            qDebug("Stopping the experiment worker...")
 
         self.stop_experiment_button.setEnabled(False)
         self.start_experiment_button.setEnabled(True)
+        qInfo("Stopped Experiment: " + str(self.current_tab.tab_name))
 
     def closeEvent(self, event):
         """
@@ -408,11 +405,11 @@ class Quarky(QMainWindow):
         """
 
         tab_count = self.central_tabs.count()
-        experiment_obj, experiment_name = Helpers.import_file(str(path)) # gets experiment object from file
+        experiment_module, experiment_name = Helpers.import_file(str(path)) # gets experiment object from file
 
         # Creating a new QQuarkTab that extracts all features from the experiment file (see QQuarkTab documentation)
-        new_experiment_tab = QQuarkTab(experiment_obj, experiment_name, True)
-        if new_experiment_tab.experiment_instance is None: # not valid experiment file
+        new_experiment_tab = QQuarkTab(experiment_module, experiment_name, True)
+        if new_experiment_tab.experiment_obj.experiment_class is None: # not valid experiment file
             qCritical("The experiment tab failed to be created - source of the error found in QQuarkTab module.")
             return
 
@@ -440,7 +437,7 @@ class Quarky(QMainWindow):
             self.current_tab = self.central_tabs.widget(idx)
             self.config_tree_panel.set_config(self.current_tab.config) # update config panel
 
-            if self.current_tab.experiment_instance is None: # check if tab is a data or experiment tab
+            if self.current_tab.experiment_obj is None: # check if tab is a data or experiment tab
                 self.start_experiment_button.setEnabled(False)
             else:
                 self.start_experiment_button.setEnabled(True)
@@ -510,7 +507,7 @@ class Quarky(QMainWindow):
         new_data_tab = QQuarkTab(None, file_name, False, file)
 
         # Handle UI updates
-        tab_idx = self.central_tabs.addTab(new_data_tab, (file_name + ".h5"))
+        tab_idx = self.central_tabs.addTab(new_data_tab, (file_name))
         self.central_tabs.setCurrentIndex(tab_idx)
         self.start_experiment_button.setEnabled(False)
         self.config_tree_panel.set_config(new_data_tab.config) # update config (when data files have config)

@@ -6,6 +6,7 @@ from PyQt5.QtCore import (
     qInfo,
     qWarning,
     qCritical,
+    QTimer
 )
 from PyQt5.QtWidgets import (
     QFileDialog,
@@ -36,9 +37,9 @@ class QConfigTreePanel(QTreeView):
         self.setMinimumSize(200, 0)
 
         # toolbar setup
-        self.save_config_button = Helpers.create_button("Save", "save_config", True)
-        self.copy_config_button = Helpers.create_button("Copy", "copy_config", True)
-        self.load_config_button = Helpers.create_button("Load", "load_config", True)
+        self.save_config_button = Helpers.create_button("Save", "save_config", True, self)
+        self.copy_config_button = Helpers.create_button("Copy", "copy_config", True, self)
+        self.load_config_button = Helpers.create_button("Load", "load_config", True, self)
         self.toolbar_layout.addWidget(self.save_config_button)
         self.toolbar_layout.addWidget(self.copy_config_button)
         self.toolbar_layout.addWidget(self.load_config_button)
@@ -145,6 +146,9 @@ class QConfigTreePanel(QTreeView):
         clipboard = QApplication.clipboard()
         clipboard.setText(json_string)
         qInfo("Current configuration copied to clipboard!")
+
+        self.copy_config_button.setText('Done!')
+        QTimer.singleShot(3000, lambda: self.copy_config_button.setText('Copy'))
 
     def load_config(self):
         """Prompts the user for a JSON file and loads it into self.config, then updates the tree."""
